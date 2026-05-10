@@ -1,0 +1,36 @@
+service: spendly-backend
+
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-south-1
+
+  httpApi:
+    cors: true
+
+functions:
+  getExpenses:
+    handler: src/handlers/getExpenses.handler
+
+    events:
+      - httpApi:
+          path: /expenses
+          method: GET
+
+  addExpense:
+    handler: src/handlers/addExpense.handler
+
+    events:
+      - httpApi:
+          path: /expenses
+          method: POST
+
+  deleteExpense:
+    handler: src/handlers/deleteExpense.handler
+
+    events:
+      - httpApi:
+          path: /expenses/{id}
+          method: DELETE
