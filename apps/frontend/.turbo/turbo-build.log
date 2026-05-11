@@ -5,7 +5,6 @@
   ▲ Next.js 14.2.35
 
    Creating an optimized production build ...
-<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: EPERM: operation not permitted, rename 'C:\Prajna\apps\frontend\.next\cache\webpack\client-production\0.pack_' -> 'C:\Prajna\apps\frontend\.next\cache\webpack\client-production\0.pack'
  ✓ Compiled successfully
    Linting and checking validity of types ...
    Collecting page data ...
@@ -18,13 +17,13 @@
    Collecting build traces ...
 
 Route (app)                              Size     First Load JS
-┌ ○ /                                    3.37 kB         186 kB
-├ ○ /_not-found                          873 B          88.2 kB
-└ ○ /dashboard                           3.05 kB         186 kB
+┌ ○ /                                    97.5 kB         185 kB
+├ ○ /_not-found                          873 B          88.1 kB
+└ ○ /dashboard                           1.35 kB        88.6 kB
 + First Load JS shared by all            87.3 kB
-  ├ chunks/1dd3208c-e73ef6474051675f.js  53.6 kB
-  ├ chunks/528-002e7685945323b3.js       31.7 kB
-  └ other shared chunks (total)          1.96 kB
+  ├ chunks/1dd3208c-1bfa912d86ba96c5.js  53.6 kB
+  ├ chunks/528-6ef41832b30f1314.js       31.7 kB
+  └ other shared chunks (total)          1.92 kB
 
 
 ○  (Static)  prerendered as static content

@@ -1,269 +1,363 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
-import Sidebar from '@/components/layout/Sidebar';
-import ExpenseForm from '@/components/expenses/ExpenseForm';
-import ExpenseList from '@/components/expenses/ExpenseList';
-import ExpenseCharts from '@/components/charts/ExpenseCharts';
-import ThemeToggle from '@/components/theme/ThemeToggle';
-import Login from '@/components/auth/Login';
+import {
+  useEffect,
+  useState,
+} from 'react';
 
 export default function DashboardPage() {
-  const [isLoggedIn, setIsLoggedIn] =
-    useState(false);
-
   const [expenses, setExpenses] =
     useState<any[]>([]);
+
+  const [amount, setAmount] =
+    useState('');
+
+  const [category, setCategory] =
+    useState('');
+
+  const [date, setDate] =
+    useState('');
 
   const [budget, setBudget] =
     useState(0);
 
-  const [budgetInput, setBudgetInput] =
+  const [userEmail, setUserEmail] =
     useState('');
 
   useEffect(() => {
     const user =
-      localStorage.getItem('user');
-
-    if (user) {
-      setIsLoggedIn(true);
-    }
-
-    const savedExpenses =
-      localStorage.getItem('expenses');
-
-    const savedBudget =
-      localStorage.getItem('budget');
-
-    if (savedExpenses) {
-      setExpenses(
-        JSON.parse(savedExpenses)
+      JSON.parse(
+        localStorage.getItem(
+          'user'
+        ) || '{}'
       );
-    }
 
-    if (savedBudget) {
-      setBudget(Number(savedBudget));
-      setBudgetInput(savedBudget);
+    if (user?.email) {
+      setUserEmail(user.email);
+
+      const savedExpenses =
+        localStorage.getItem(
+          `expenses_${user.email}`
+        );
+
+      const savedBudget =
+        localStorage.getItem(
+          `budget_${user.email}`
+        );
+
+      if (savedExpenses) {
+        setExpenses(
+          JSON.parse(
+            savedExpenses
+          )
+        );
+      }
+
+      if (savedBudget) {
+        setBudget(
+          Number(savedBudget)
+        );
+      }
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(
-      'expenses',
-      JSON.stringify(expenses)
-    );
-  }, [expenses]);
+    if (userEmail) {
+      localStorage.setItem(
+        `expenses_${userEmail}`,
+        JSON.stringify(expenses)
+      );
+    }
+  }, [expenses, userEmail]);
 
   useEffect(() => {
-    localStorage.setItem(
-      'budget',
-      budget.toString()
+    if (userEmail) {
+      localStorage.setItem(
+        `budget_${userEmail}`,
+        String(budget)
+      );
+    }
+  }, [budget, userEmail]);
+
+  const addExpense = () => {
+    if (
+      !amount ||
+      !category ||
+      !date
+    ) {
+      alert('Fill all fields');
+
+      return;
+    }
+
+    const newExpense = {
+      id: Date.now(),
+
+      amount: Number(amount),
+
+      category,
+
+      date,
+    };
+
+    const updatedExpenses = [
+      ...expenses,
+      newExpense,
+    ];
+
+    setExpenses(
+      updatedExpenses
     );
-  }, [budget]);
 
-  const totalSpent = expenses.reduce(
-    (sum, expense) =>
-      sum + Number(expense.amount),
-    0
-  );
+    localStorage.setItem(
+      `expenses_${userEmail}`,
+      JSON.stringify(
+        updatedExpenses
+      )
+    );
 
-  const remaining =
-    budget - totalSpent;
+    setAmount('');
 
-  const saveBudget = () => {
-    setBudget(Number(budgetInput));
+    setCategory('');
+
+    setDate('');
   };
 
-  if (!isLoggedIn) {
-    return (
-      <Login
-        setIsLoggedIn={
-          setIsLoggedIn
-        }
-      />
+  const totalSpent =
+    expenses.reduce(
+      (acc, item) =>
+        acc + item.amount,
+      0
     );
-  }
 
   return (
-    <main className="min-h-screen bg-[#050816] text-white">
-      <div className="lg:flex">
-        <Sidebar />
+    <div className="min-h-screen bg-black text-white p-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-4xl font-bold">
+          Spendly
+        </h1>
 
-        <section className="flex-1 p-5">
-          {/* HEADER */}
+        <button
+          onClick={() => {
+            localStorage.removeItem(
+              'user'
+            );
 
-          <div className="mb-5 flex items-center justify-between">
-            <h1 className="text-3xl font-bold">
-              Spendly Dashboard
-            </h1>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  localStorage.clear();
-                  window.location.reload();
-                }}
-                className="rounded-xl border border-red-500 px-4 py-2"
-              >
-                Logout
-              </button>
-
-              <ThemeToggle />
-
-              <button
-                onClick={() => {
-                  if (
-                    !expenses.length
-                  ) {
-                    alert(
-                      'No expenses to export'
-                    );
-                    return;
-                  }
-
-                  const csvRows = [
-                    [
-                      'Amount',
-                      'Category',
-                      'Description',
-                      'Date',
-                    ],
-                    ...expenses.map(
-                      (expense) => [
-                        expense.amount,
-                        expense.category,
-                        expense.description,
-                        expense.date,
-                      ]
-                    ),
-                  ];
-
-                  const csvContent =
-                    csvRows
-                      .map((row) =>
-                        row.join(',')
-                      )
-                      .join('\n');
-
-                  const blob =
-                    new Blob(
-                      [csvContent],
-                      {
-                        type: 'text/csv',
-                      }
-                    );
-
-                  const link =
-                    document.createElement(
-                      'a'
-                    );
-
-                  link.href =
-                    URL.createObjectURL(
-                      blob
-                    );
-
-                  link.download =
-                    'expenses.csv';
-
-                  link.click();
-                }}
-                className="rounded-xl border border-slate-700 px-4 py-2"
-              >
-                Export CSV
-              </button>
-            </div>
-          </div>
-
-          {/* BUDGET */}
-
-          <div className="mb-5 rounded-2xl bg-slate-900 p-5">
-            <h2 className="mb-3 text-xl font-bold">
-              Monthly Budget
-            </h2>
-
-            <div className="flex gap-3">
-              <input
-                type="number"
-                placeholder="Enter budget"
-                value={budgetInput}
-                onChange={(e) =>
-                  setBudgetInput(
-                    e.target.value
-                  )
-                }
-                className="flex-1 rounded-xl border border-slate-700 bg-slate-950 p-3"
-              />
-
-              <button
-                onClick={saveBudget}
-                className="rounded-xl bg-indigo-600 px-5"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-
-          {/* STATS */}
-
-          <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-2xl bg-indigo-600 p-5">
-              <p>Total Spent</p>
-
-              <h2 className="text-3xl font-bold">
-                ₹{totalSpent}
-              </h2>
-            </div>
-
-            <div className="rounded-2xl bg-green-600 p-5">
-              <p>Budget</p>
-
-              <h2 className="text-3xl font-bold">
-                ₹{budget}
-              </h2>
-            </div>
-
-            <div className="rounded-2xl bg-pink-600 p-5">
-              <p>Remaining</p>
-
-              <h2 className="text-3xl font-bold">
-                ₹{remaining}
-              </h2>
-            </div>
-          </div>
-
-          {/* EMPTY */}
-
-          {expenses.length === 0 && (
-            <div className="mb-5 rounded-2xl border border-dashed border-slate-700 p-10 text-center">
-              No expenses added yet 🚀
-            </div>
-          )}
-
-          {/* CONTENT */}
-
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-            <ExpenseForm
-              setExpenses={setExpenses}
-            />
-
-            <div className="space-y-5 lg:col-span-2">
-              <ExpenseList
-                expenses={expenses}
-                setExpenses={setExpenses}
-              />
-
-              {expenses.length >
-                0 && (
-                <ExpenseCharts
-                  expenses={expenses}
-                />
-              )}
-            </div>
-          </div>
-        </section>
+            window.location.reload();
+          }}
+          className="bg-red-500 px-4 py-2 rounded-xl"
+        >
+          Logout
+        </button>
       </div>
-    </main>
+
+      <div className="mt-8">
+        <label className="block mb-2 text-xl">
+          Monthly Budget
+        </label>
+
+        <input
+          type="number"
+          value={budget}
+          onChange={(e) =>
+            setBudget(
+              Number(
+                e.target.value
+              )
+            )
+          }
+          className="w-full p-4 rounded-xl bg-gray-900 border border-gray-700"
+        />
+      </div>
+
+      <div className="grid grid-cols-3 gap-4 mt-8">
+        <div className="bg-purple-700 p-6 rounded-2xl">
+          <h2>Total Spent</h2>
+
+          <p className="text-3xl font-bold">
+            ₹{totalSpent}
+          </p>
+        </div>
+
+        <div className="bg-green-700 p-6 rounded-2xl">
+          <h2>Budget</h2>
+
+          <p className="text-3xl font-bold">
+            ₹{budget}
+          </p>
+        </div>
+
+        <div className="bg-pink-700 p-6 rounded-2xl">
+          <h2>Remaining</h2>
+
+          <p className="text-3xl font-bold">
+            ₹
+            {budget -
+              totalSpent}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-10 bg-gray-950 p-6 rounded-2xl">
+        <h2 className="text-3xl font-bold mb-6">
+          Add Expense
+        </h2>
+
+        <div className="grid gap-4">
+          <input
+            type="number"
+            placeholder="Amount"
+            value={amount}
+            onChange={(e) =>
+              setAmount(
+                e.target.value
+              )
+            }
+            className="p-4 rounded-xl bg-black border border-gray-700"
+          />
+
+          <input
+            type="text"
+            placeholder="Category"
+            value={category}
+            onChange={(e) =>
+              setCategory(
+                e.target.value
+              )
+            }
+            className="p-4 rounded-xl bg-black border border-gray-700"
+          />
+
+          <input
+            type="date"
+            value={date}
+            onChange={(e) =>
+              setDate(
+                e.target.value
+              )
+            }
+            className="p-4 rounded-xl bg-black border border-gray-700"
+          />
+
+          <button
+            onClick={addExpense}
+            className="bg-purple-600 p-4 rounded-xl"
+          >
+            Add Expense
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-10">
+        <h2 className="text-3xl font-bold mb-4">
+          Expenses
+        </h2>
+
+        <div className="grid gap-4">
+          {expenses.map(
+            (expense) => (
+              <div
+                key={
+                  expense.id
+                }
+                className="bg-gray-900 p-4 rounded-xl flex justify-between"
+              >
+                <div>
+                  <p>
+                    {
+                      expense.category
+                    }
+                  </p>
+
+                  <p className="text-sm text-gray-400">
+                    {
+                      expense.date
+                    }
+                  </p>
+                </div>
+
+                <p>
+                  ₹
+                  {
+                    expense.amount
+                  }
+                </p>
+              </div>
+            )
+          )}
+        </div>
+      </div>
+
+      <div className="mt-10 bg-gray-950 p-6 rounded-2xl">
+        <h2 className="text-3xl font-bold mb-6">
+          Expense Distribution
+        </h2>
+
+        <div className="space-y-4">
+          {[
+            ...new Set(
+              expenses.map(
+                (e) =>
+                  e.category
+              )
+            ),
+          ].map((category) => {
+            const total =
+              expenses
+                .filter(
+                  (e) =>
+                    e.category ===
+                    category
+                )
+                .reduce(
+                  (
+                    acc,
+                    e
+                  ) =>
+                    acc +
+                    e.amount,
+                  0
+                );
+
+            const percentage =
+              totalSpent > 0
+                ? (
+                    (total /
+                      totalSpent) *
+                    100
+                  ).toFixed(1)
+                : 0;
+
+            return (
+              <div
+                key={category}
+              >
+                <div className="flex justify-between mb-1">
+                  <span>
+                    {category}
+                  </span>
+
+                  <span>
+                    {
+                      percentage
+                    }
+                    %
+                  </span>
+                </div>
+
+                <div className="w-full bg-gray-800 rounded-full h-5">
+                  <div
+                    className="bg-purple-600 h-5 rounded-full"
+                    style={{
+                      width: `${percentage}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
   );
 }

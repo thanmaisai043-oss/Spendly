@@ -2,109 +2,78 @@
 
 import { useState } from 'react';
 
-export default function Login({
-  setIsLoggedIn,
-}: any) {
-  const [isSignup, setIsSignup] =
-    useState(false);
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from 'firebase/auth';
 
-  const [username, setUsername] =
+import { auth } from '@/lib/firebase';
+
+export default function Login({
+  setUser,
+}: {
+  setUser: any;
+}) {
+  const [email, setEmail] =
     useState('');
 
   const [password, setPassword] =
     useState('');
 
-  const [error, setError] =
-    useState('');
+  const [isLogin, setIsLogin] =
+    useState(true);
 
-  /* SIGN UP */
+  const handleAuth = async () => {
+    try {
+      let result;
 
-  const signup = () => {
-    if (
-      !username ||
-      !password
-    ) {
-      setError(
-        'Please fill all fields'
-      );
-      return;
-    }
+      if (isLogin) {
+        result =
+          await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+      } else {
+        result =
+          await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+      }
 
-    localStorage.setItem(
-      'savedUser',
-      username
-    );
-
-    localStorage.setItem(
-      'savedPass',
-      password
-    );
-
-    alert(
-      'Account created successfully'
-    );
-
-    setIsSignup(false);
-  };
-
-  /* LOGIN */
-
-  const login = () => {
-    const savedUser =
-      localStorage.getItem(
-        'savedUser'
-      );
-
-    const savedPass =
-      localStorage.getItem(
-        'savedPass'
-      );
-
-    if (
-      username === savedUser &&
-      password === savedPass
-    ) {
       localStorage.setItem(
         'user',
-        username
+        JSON.stringify(
+          result.user
+        )
       );
 
-      setIsLoggedIn(true);
-    } else {
-      setError(
-        'Invalid username or password'
-      );
+      setUser(result.user);
+    } catch (error: any) {
+      alert(error.message);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#050816] p-5">
-      <div className="w-full max-w-md rounded-3xl bg-slate-900 p-8 shadow-2xl">
-        <h1 className="mb-2 text-3xl font-bold text-white">
+    <div className="flex min-h-screen items-center justify-center bg-black">
+      <div className="w-full max-w-md rounded-2xl bg-[#111827] p-8">
+        <h1 className="mb-8 text-5xl font-bold text-white">
           Spendly
         </h1>
 
-        <p className="mb-6 text-slate-400">
-          {isSignup
-            ? 'Create Account'
-            : 'Login to continue'}
-        </p>
-
-        {/* USERNAME */}
-
         <input
-          type="text"
-          placeholder="Username"
-          value={username}
+          type="email"
+          placeholder="Email"
+          value={email}
           onChange={(e) =>
-            setUsername(
+            setEmail(
               e.target.value
             )
           }
-          className="mb-4 w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-white"
+          className="mb-4 w-full rounded-xl bg-[#1e293b] p-4 text-white outline-none"
         />
-
-        {/* PASSWORD */}
 
         <input
           type="password"
@@ -115,48 +84,30 @@ export default function Login({
               e.target.value
             )
           }
-          className="mb-4 w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-white"
+          className="mb-4 w-full rounded-xl bg-[#1e293b] p-4 text-white outline-none"
         />
 
-        {/* ERROR */}
-
-        {error && (
-          <p className="mb-4 text-sm text-red-400">
-            {error}
-          </p>
-        )}
-
-        {/* BUTTON */}
-
         <button
-          onClick={
-            isSignup
-              ? signup
-              : login
+          onClick={handleAuth}
+          className="w-full rounded-xl bg-purple-600 p-4 text-white"
+        >
+          {isLogin
+            ? 'Login'
+            : 'Create Account'}
+        </button>
+
+        <p
+          onClick={() =>
+            setIsLogin(
+              !isLogin
+            )
           }
-          className="w-full rounded-xl bg-violet-600 p-3 font-semibold text-white"
+          className="mt-4 cursor-pointer text-center text-gray-300"
         >
-          {isSignup
-            ? 'Create Account'
-            : 'Login'}
-        </button>
-
-        {/* TOGGLE */}
-
-        <button
-          onClick={() => {
-            setIsSignup(
-              !isSignup
-            );
-
-            setError('');
-          }}
-          className="mt-4 w-full text-sm text-slate-400"
-        >
-          {isSignup
-            ? 'Already have an account? Login'
-            : 'Create new account'}
-        </button>
+          {isLogin
+            ? 'Create new account'
+            : 'Already have account? Login'}
+        </p>
       </div>
     </div>
   );
