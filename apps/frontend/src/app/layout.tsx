@@ -1,10 +1,9 @@
 import './globals.css';
 
-import ThemeProvider from '@/components/providers/ThemeProvider';
-
 export const metadata = {
   title: 'Spendly',
-  description: 'Expense Tracker',
+  description:
+    'Smart Finance Tracker',
 };
 
 export default function RootLayout({
@@ -13,11 +12,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+    <html lang="en">
+      <body className="dark-theme">
+        {children}
       </body>
     </html>
   );
