@@ -1,9 +1,6 @@
 'use client';
 
-import {
-  useEffect,
-  useState,
-} from 'react';
+import { useEffect, useState } from 'react';
 
 import Sidebar from '@/components/layout/Sidebar';
 import ExpenseForm from '@/components/expenses/ExpenseForm';
@@ -25,26 +22,50 @@ export default function DashboardPage() {
     Expense[]
   >([]);
 
-  const [budget] = useState(15000);
+  const [budget, setBudget] =
+    useState<number>(0);
+
+  const [budgetInput, setBudgetInput] =
+    useState('');
+
+  /* LOAD SAVED DATA */
 
   useEffect(() => {
-    fetchExpenses();
+    const savedExpenses =
+      localStorage.getItem('expenses');
+
+    const savedBudget =
+      localStorage.getItem('budget');
+
+    if (savedExpenses) {
+      setExpenses(
+        JSON.parse(savedExpenses)
+      );
+    }
+
+    if (savedBudget) {
+      setBudget(Number(savedBudget));
+      setBudgetInput(savedBudget);
+    }
   }, []);
 
-  async function fetchExpenses() {
-    try {
-      const response = await fetch(
-        'https://xrf0pgy3g7.execute-api.ap-south-1.amazonaws.com/expenses'
-      );
+  /* SAVE EXPENSES */
 
-      const data =
-        await response.json();
+  useEffect(() => {
+    localStorage.setItem(
+      'expenses',
+      JSON.stringify(expenses)
+    );
+  }, [expenses]);
 
-      setExpenses(data);
-    } catch (error) {
-      console.error(error);
-    }
-  }
+  /* SAVE BUDGET */
+
+  useEffect(() => {
+    localStorage.setItem(
+      'budget',
+      budget.toString()
+    );
+  }, [budget]);
 
   const totalSpent = expenses.reduce(
     (sum, expense) =>
@@ -54,6 +75,10 @@ export default function DashboardPage() {
 
   const remaining =
     budget - totalSpent;
+
+  const saveBudget = () => {
+    setBudget(Number(budgetInput));
+  };
 
   return (
     <main className="min-h-screen bg-[#050816] text-white">
@@ -85,6 +110,35 @@ export default function DashboardPage() {
 
               <button className="rounded-xl border border-slate-700 px-4 py-2 text-sm transition hover:bg-slate-800">
                 Export CSV
+              </button>
+            </div>
+          </div>
+
+          {/* BUDGET SECTION */}
+
+          <div className="mb-5 rounded-2xl bg-slate-900 p-5">
+            <h2 className="mb-4 text-lg font-semibold">
+              Monthly Budget
+            </h2>
+
+            <div className="flex flex-col gap-3 md:flex-row">
+              <input
+                type="number"
+                placeholder="Enter monthly budget"
+                value={budgetInput}
+                onChange={(e) =>
+                  setBudgetInput(
+                    e.target.value
+                  )
+                }
+                className="flex-1 rounded-xl border border-slate-700 bg-slate-950 p-3 text-white"
+              />
+
+              <button
+                onClick={saveBudget}
+                className="rounded-xl bg-violet-600 px-5 py-3 font-semibold"
+              >
+                Save Budget
               </button>
             </div>
           </div>
@@ -123,6 +177,14 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* EMPTY STATE */}
+
+          {expenses.length === 0 && (
+            <div className="mb-5 rounded-2xl border border-dashed border-slate-700 p-10 text-center text-slate-400">
+              No expenses added yet 🚀
+            </div>
+          )}
+
           {/* GRID */}
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -142,12 +204,18 @@ export default function DashboardPage() {
                 setExpenses={setExpenses}
               />
 
-              <ExpenseCharts />
+              {expenses.length > 0 && (
+                <>
+                  <ExpenseCharts
+                    expenses={expenses}
+                  />
 
-              <AIInsights
-                expenses={expenses}
-                budget={budget}
-              />
+                  <AIInsights
+                    expenses={expenses}
+                    budget={budget}
+                  />
+                </>
+              )}
             </div>
           </div>
         </section>
