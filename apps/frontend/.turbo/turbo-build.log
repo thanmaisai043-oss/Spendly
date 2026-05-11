@@ -17,7 +17,7 @@
    Collecting build traces ...
 
 Route (app)                              Size     First Load JS
-┌ ○ /                                    2.34 kB        89.6 kB
+┌ ○ /                                    2.83 kB          90 kB
 ├ ○ /_not-found                          873 B          88.1 kB
 └ ○ /dashboard                           2.21 kB        89.4 kB
 + First Load JS shared by all            87.2 kB
